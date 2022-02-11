@@ -1,15 +1,20 @@
 #!/usr/bin/bash
 #
-# update the COVID repo from the NYT
+# Manage the COVID repo from the NYT
 # 20220211T101547
 #
-# Edit the script to set the default path for the repo.
-# The repo is named `covid-19-data`, so that should be the end of the
-# path for $covid_home. The clone command will automatically start in its
-# parent directory, unless you change directories with the `-i` option. If
-# you clone without `-i`, it is assumed you have deleted the original clone
-# and just want a new one.
-# note: no trailing backslash
+# Edit the script to set the default path for the repo.  The repo is
+# named `covid-19-data`, so that should be the end of the path for
+# $covid_home. The clone command will automatically start in its
+# parent directory, unless you change directories with the `-i`
+# option. If you clone without `-i`, it is assumed you have deleted
+# the original clone and just want a new one. (Because git will not
+# clone into an existing directory.)
+#
+# ----------------------------------------------------------------
+#			      Variables
+# ----------------------------------------------------------------
+# NOTE: no trailing backslash
 covid_home="/c/Users/micha/Dropbox/src/covid/covid-19-data"
 # strips off the trailing piece of the path
 covid_new_home=${covid_home%/*}
@@ -18,7 +23,11 @@ covid_clone="git clone $covid_repo"
 covid_pull="git pull"
 covid_command=""
 covid_process=""
-
+# Define list of arguments expected in the input
+optstring=":cphir:"
+# ----------------------------------------------------------------
+#			      Functions
+# ----------------------------------------------------------------
 usage() {
     cat << EOF
 
@@ -35,8 +44,8 @@ EOF
 
 }
 
-# Remember that the command will run in a subshell, so you won't be
-# changed into that directory yourself.
+# Remember that the git command will run in a subshell, so you won't
+# be changed into that directory yourself.
 
 get_data(){
     if [[ $covid_process == "clone"  ]] ; then
@@ -57,22 +66,16 @@ get_data(){
 	echo "Something went horribly wrong getting data."
 	exit 1
     fi
-    
 }
+# ----------------------------------------------------------------
+#			     Actual Work
+# ----------------------------------------------------------------
 
+# quit with help message if no parameters given
 if [[ ${#} -eq 0 ]]; then
     usage
     exit 1
 fi
-
-# -c clone
-# -p pull
-# -r <new repo>
-# -h help file
-# -i <new home dir>
-#
-# Define list of arguments expected in the input
-optstring=":cphir:"
 
 while getopts ${optstring} arg; do
   case "${arg}" in
@@ -91,14 +94,10 @@ while getopts ${optstring} arg; do
 	 fi
 	 ;;
       i) echo "cloning to new directory ..."
-	 # Check next positional parameter
-	 # eval nextopt=\${$OPTIND}
-
 	 # stolen from StackOverflow: how to make a parameter argument
 	 # optional, i.e., have a default value
 	 nextopt=${!OPTIND}
-	 # echo "The next option value is $nextopt"
-	 # existing or starting with dash?
+	 # existing and not starting with dash?
 	 if [[ -n $nextopt && $nextopt != -* ]] ; then
 	     OPTIND=$((OPTIND + 1))
 	     covid_new_home=$nextopt
@@ -110,7 +109,6 @@ while getopts ${optstring} arg; do
       h) usage
 	 exit 0
 	 ;;
-
       ?)
       echo "Invalid option: -${OPTARG}."
       echo
@@ -120,7 +118,3 @@ while getopts ${optstring} arg; do
 done
 
 get_data
-
-# p=/foo/bar/file1
-# path=$( echo ${p%/*} )
-# file=$( echo ${p##*/} )
